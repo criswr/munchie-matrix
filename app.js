@@ -1,18 +1,100 @@
 /* ============================================================
    MUNCHIE MATRIX — app.js
-   Fetches data.json and renders snack/drink sections
+   Data source: Google Sheets (public CSV export)
    ============================================================ */
 
-const SECTION_META = {
-  snacks:      { label: 'Snacks',          icon: '🍿' },
-  cold_drinks: { label: 'Bebidas frías',   icon: '🥶' },
-  hot_drinks:  { label: 'Bebidas calientes', icon: '☕️' },
-};
+// ── Config ── Edit these two things if the sheet ever changes
+const SPREADSHEET_ID = '1-xUGDJPCugd_lPWpLWInP3Y5lTJdIm1FYUAQWjeu79Y';
+
+const SECTIONS = [
+  { key: 'snacks',      sheetName: 'Snacks',            label: 'Snacks',             icon: '🍿' },
+  { key: 'cold_drinks', sheetName: 'Bebidas frias',     label: 'Bebidas frías',      icon: '🥶' },
+  { key: 'hot_drinks',  sheetName: 'Bebidas calientes', label: 'Bebidas calientes',  icon: '☕️' },
+];
 
 // Stagger delay between items (ms)
 const STAGGER_MS = 80;
 // Base delay before first item animates in
 const BASE_DELAY_MS = 350;
+
+// ── Sheets CSV helpers ──────────────────────────────────────
+
+/**
+ * Build the public CSV export URL for a given sheet tab
+ * @param {string} sheetName
+ */
+function sheetUrl(sheetName) {
+  return (
+    `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}` +
+    `/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`
+  );
+}
+
+/**
+ * Parse a single CSV row, respecting quoted fields
+ * @param {string} line
+ * @returns {string[]}
+ */
+function parseCSVRow(line) {
+  const cols = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      // Escaped quote inside a quoted field
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      cols.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cols.push(current.trim());
+  return cols;
+}
+
+/**
+ * Parse CSV text into item objects.
+ * Expects columns: title, description, active
+ * Only returns rows where active = TRUE (case-insensitive)
+ * @param {string} text - raw CSV string
+ * @returns {{ title: string, description: string }[]}
+ */
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+
+  const headers = parseCSVRow(lines[0]).map((h) => h.toLowerCase());
+  const titleIdx = headers.indexOf('title');
+  const descIdx  = headers.indexOf('description');
+  const activeIdx = headers.indexOf('active');
+
+  const items = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVRow(lines[i]);
+
+    // Skip inactive rows (if active column exists and value isn't TRUE)
+    if (activeIdx >= 0) {
+      const activeVal = (cols[activeIdx] || '').toUpperCase();
+      if (activeVal !== 'TRUE') continue;
+    }
+
+    const title       = titleIdx  >= 0 ? cols[titleIdx]  : '';
+    const description = descIdx   >= 0 ? cols[descIdx]   : '';
+    if (title) items.push({ title, description });
+  }
+  return items;
+}
+
+// ── DOM builders ────────────────────────────────────────────
 
 /**
  * Build the chevron SVG icon
@@ -56,7 +138,6 @@ function createItemEl(itemData, index) {
   li.className = 'item';
   li.id = `item-${itemData.title.toLowerCase().replace(/\s+/g, '-')}`;
 
-  // Stagger animation delay
   const delay = BASE_DELAY_MS + index * STAGGER_MS;
   li.style.animationDelay = `${delay}ms`;
 
@@ -71,69 +152,44 @@ function createItemEl(itemData, index) {
   `;
 
   li.querySelector('.item-title').addEventListener('click', () => toggleItem(li));
-
   return li;
 }
 
 /**
- * Render a full section (snacks or drinks)
- * @param {string} key - 'snacks' | 'drinks'
+ * Render a full section
+ * @param {{ key, sheetName, label, icon }} section
  * @param {Array} items
- * @param {number} sectionIndex - used to offset stagger per section
+ * @param {number} sectionIndex
  * @returns {HTMLElement}
  */
-function createSectionEl(key, items, sectionIndex) {
-  const meta = SECTION_META[key] || { label: key, icon: '•' };
-  const itemOffset = sectionIndex * 10; // keep delays distinct across sections
+function createSectionEl(section, items, sectionIndex) {
+  const itemOffset = sectionIndex * 10;
 
-  const section = document.createElement('section');
-  section.className = 'munchie-section';
-  section.setAttribute('aria-label', meta.label);
+  const sectionEl = document.createElement('section');
+  sectionEl.className = 'munchie-section';
+  sectionEl.setAttribute('aria-label', section.label);
 
   const header = document.createElement('div');
   header.className = 'section-header';
   header.innerHTML = `
-    <span class="section-icon" aria-hidden="true">${meta.icon}</span>
-    <h2 class="section-title">${meta.label}</h2>
+    <span class="section-icon" aria-hidden="true">${section.icon}</span>
+    <h2 class="section-title">${section.label}</h2>
     <div class="section-line" aria-hidden="true"></div>
   `;
 
   const ul = document.createElement('ul');
   ul.className = 'item-list';
-
   items.forEach((itemData, idx) => {
     ul.appendChild(createItemEl(itemData, itemOffset + idx));
   });
 
-  section.appendChild(header);
-  section.appendChild(ul);
-  return section;
+  sectionEl.appendChild(header);
+  sectionEl.appendChild(ul);
+  return sectionEl;
 }
 
 /**
- * Main render function
- * @param {Object} data - parsed JSON from data.json
- */
-function render(data) {
-  const app = document.getElementById('app');
-
-  // Remove loading state
-  const loading = document.getElementById('loading');
-  if (loading) loading.remove();
-
-  const sectionOrder = ['snacks', 'cold_drinks', 'hot_drinks'];
-  sectionOrder.forEach((key, sectionIndex) => {
-    if (data[key] && data[key].length > 0) {
-      const sorted = [...data[key]].sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
-      app.appendChild(createSectionEl(key, sorted, sectionIndex));
-    }
-  });
-}
-
-/**
- * Show error state
+ * Show error state in the loading element
  * @param {string} message
  */
 function showError(message) {
@@ -142,21 +198,38 @@ function showError(message) {
     loading.innerHTML = `
       <span style="font-size:2rem">😕</span>
       <span style="color:#e8f0ef">${message}</span>
-      <span style="font-size:0.8rem;color:#5a7a78">Asegurate de que data.json sea accesible.</span>
+      <span style="font-size:0.8rem;color:#5a7a78">Asegurate de que la hoja de Google esté pública.</span>
     `;
   }
 }
 
-// ── Init ──
+// ── Init ────────────────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('data.json')
-    .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
+  Promise.all(
+    SECTIONS.map((section) =>
+      fetch(sheetUrl(section.sheetName))
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status} for "${section.sheetName}"`);
+          return res.text();
+        })
+        .then((csv) => ({ section, items: parseCSV(csv) }))
+    )
+  )
+    .then((results) => {
+      const loading = document.getElementById('loading');
+      if (loading) loading.remove();
+
+      const app = document.getElementById('app');
+      results.forEach(({ section, items }, sectionIndex) => {
+        if (items.length > 0) {
+          const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
+          app.appendChild(createSectionEl(section, sorted, sectionIndex));
+        }
+      });
     })
-    .then((data) => render(data))
     .catch((err) => {
-      console.error('Munchie Matrix: failed to load data.json', err);
+      console.error('Munchie Matrix:', err);
       showError('No se pudo cargar la lista.');
     });
 });
