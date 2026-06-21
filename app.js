@@ -123,7 +123,10 @@ function render(data) {
   const sectionOrder = ['snacks', 'drinks'];
   sectionOrder.forEach((key, sectionIndex) => {
     if (data[key] && data[key].length > 0) {
-      app.appendChild(createSectionEl(key, data[key], sectionIndex));
+      const sorted = [...data[key]].sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
+      app.appendChild(createSectionEl(key, sorted, sectionIndex));
     }
   });
 }
