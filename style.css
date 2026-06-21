@@ -1,0 +1,317 @@
+/* ============================================================
+   MUNCHIE MATRIX — style.css
+   Dark theme, black & teal, mobile-first
+   ============================================================ */
+
+/* ── Reset & Base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg:           #080b0b;
+  --surface:      #101616;
+  --card:         #161e1e;
+  --card-hover:   #1c2828;
+  --teal:         #00bfa5;
+  --teal-bright:  #00e5cc;
+  --teal-dim:     rgba(0, 191, 165, 0.12);
+  --teal-glow:    rgba(0, 191, 165, 0.35);
+  --text:         #e8f0ef;
+  --text-muted:   #5a7a78;
+  --text-sub:     #8aaaa8;
+  --border:       rgba(0, 191, 165, 0.1);
+  --border-open:  rgba(0, 191, 165, 0.45);
+  --font-head:    'Outfit', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --radius:       16px;
+  --radius-sm:    10px;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 0 env(safe-area-inset-bottom, 24px);
+  overflow-x: hidden;
+  /* Subtle animated mesh background */
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,191,165,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 100%, rgba(0,191,165,0.04) 0%, transparent 60%);
+}
+
+/* ── Header ── */
+.site-header {
+  padding: 52px 24px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--teal) 0%, #007a6a 100%);
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #000;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+  box-shadow: 0 0 28px var(--teal-glow), 0 4px 16px rgba(0,0,0,0.5);
+  animation: logoPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.site-title {
+  font-family: var(--font-head);
+  font-weight: 900;
+  font-size: 2rem;
+  letter-spacing: -0.5px;
+  color: var(--text);
+  animation: headerReveal 0.7s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.site-title span {
+  color: var(--teal);
+}
+
+.site-subtitle {
+  margin-top: 6px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  animation: headerReveal 0.7s 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Main app container ── */
+#app {
+  padding: 0 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ── Section ── */
+.munchie-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.section-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.section-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  color: var(--teal);
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border-open), transparent);
+}
+
+/* ── Item List ── */
+.item-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Individual Item ── */
+.item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    background 0.3s ease;
+
+  /* Stagger reveal — animation-delay set per-item via JS */
+  opacity: 0;
+  animation: slideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.item.open {
+  border-color: var(--border-open);
+  box-shadow: 0 0 20px var(--teal-dim), 0 2px 12px rgba(0,0,0,0.4);
+  background: var(--card-hover);
+}
+
+/* ── Title Button ── */
+.item-title {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  font-family: var(--font-head);
+  font-weight: 500;
+  font-size: 1.05rem;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s ease;
+}
+
+.item.open .item-title {
+  color: var(--teal-bright);
+}
+
+.item-title-text {
+  flex: 1;
+}
+
+/* Chevron */
+.item-chevron {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-open);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease, border-color 0.2s ease;
+  color: var(--teal);
+}
+
+.item.open .item-chevron {
+  transform: rotate(180deg);
+  background: var(--teal-dim);
+}
+
+.item-chevron svg {
+  display: block;
+}
+
+/* ── Description (accordion) ── */
+.item-description {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease;
+  opacity: 0;
+}
+
+.item.open .item-description {
+  max-height: 200px;
+  opacity: 1;
+}
+
+.item-description-inner {
+  padding: 0 20px 20px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-sub);
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+/* ── Loading state ── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 80px 24px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 16px 24px 32px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.4px;
+}
+
+/* ── Keyframes ── */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes logoPop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Active press feedback (mobile) ── */
+.item-title:active .item-title-text {
+  opacity: 0.7;
+}

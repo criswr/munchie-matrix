@@ -1,0 +1,38 @@
+{
+  "snacks": [
+    {
+      "title": "Doritos",
+      "description": "Nacho cheese flavor, about half a bag left in the pantry."
+    },
+    {
+      "title": "Granola Bar",
+      "description": "Oats & honey, 3 bars remaining in the top shelf."
+    },
+    {
+      "title": "Rice Cakes",
+      "description": "Plain, lightly salted. A whole bag unopened."
+    },
+    {
+      "title": "Dark Chocolate",
+      "description": "70% cacao, two squares left from last night."
+    }
+  ],
+  "drinks": [
+    {
+      "title": "Sparkling Water",
+      "description": "Lime flavor, 4 cans chilling in the fridge."
+    },
+    {
+      "title": "Orange Juice",
+      "description": "Fresh-squeezed, about 500ml left. Drink soon!"
+    },
+    {
+      "title": "Cold Brew Coffee",
+      "description": "Homemade, in the big mason jar. Strong stuff."
+    },
+    {
+      "title": "Chamomile Tea",
+      "description": "Dried loose-leaf, tin is almost full. Great before bed."
+    }
+  ]
+}
