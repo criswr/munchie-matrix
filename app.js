@@ -4,8 +4,9 @@
    ============================================================ */
 
 const SECTION_META = {
-  snacks: { label: 'Snacks', icon: '🍿' },
-  drinks: { label: 'Drinks', icon: '🧃' },
+  snacks:      { label: 'Snacks',          icon: '🍿' },
+  cold_drinks: { label: 'Bebidas frías',   icon: '🥶' },
+  hot_drinks:  { label: 'Bebidas calientes', icon: '☕️' },
 };
 
 // Stagger delay between items (ms)
@@ -120,7 +121,7 @@ function render(data) {
   const loading = document.getElementById('loading');
   if (loading) loading.remove();
 
-  const sectionOrder = ['snacks', 'drinks'];
+  const sectionOrder = ['snacks', 'cold_drinks', 'hot_drinks'];
   sectionOrder.forEach((key, sectionIndex) => {
     if (data[key] && data[key].length > 0) {
       const sorted = [...data[key]].sort((a, b) =>
@@ -141,7 +142,7 @@ function showError(message) {
     loading.innerHTML = `
       <span style="font-size:2rem">😕</span>
       <span style="color:#e8f0ef">${message}</span>
-      <span style="font-size:0.8rem;color:#5a7a78">Check that data.json is accessible.</span>
+      <span style="font-size:0.8rem;color:#5a7a78">Asegurate de que data.json sea accesible.</span>
     `;
   }
 }
@@ -156,6 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .then((data) => render(data))
     .catch((err) => {
       console.error('Munchie Matrix: failed to load data.json', err);
-      showError('Couldn\'t load the munchie list.');
+      showError('No se pudo cargar la lista.');
     });
 });
