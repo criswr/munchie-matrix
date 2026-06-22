@@ -44,6 +44,8 @@ body {
   margin: 0 auto;
   padding: 0 0 env(safe-area-inset-bottom, 24px);
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
   /* Subtle animated mesh background */
   background-image:
     radial-gradient(ellipse 60% 40% at 50% 0%, rgba(0,191,165,0.07) 0%, transparent 70%),
@@ -103,6 +105,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 32px;
+  flex: 1;
 }
 
 /* ── Section ── */
