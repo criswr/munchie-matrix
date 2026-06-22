@@ -8,7 +8,7 @@ const SPREADSHEET_ID = '1-xUGDJPCugd_lPWpLWInP3Y5lTJdIm1FYUAQWjeu79Y';
 
 const SECTIONS = [
   { key: 'snacks',      sheetName: 'Snacks',            label: 'Snacks',             icon: '🍿' },
-  { key: 'cold_drinks', sheetName: 'Bebidas frias',     label: 'Bebidas frías',      icon: '🥶' },
+  { key: 'cold_drinks', sheetName: 'Bebidas frias',     label: 'Bebidas frías',      icon: '🥤' },
   { key: 'hot_drinks',  sheetName: 'Bebidas calientes', label: 'Bebidas calientes',  icon: '☕️' },
 ];
 
@@ -165,17 +165,27 @@ function createItemEl(itemData, index) {
 function createSectionEl(section, items, sectionIndex) {
   const itemOffset = sectionIndex * 10;
 
+  // Header animates in just before its first item
+  const headerDelay = Math.max(50, BASE_DELAY_MS + itemOffset * STAGGER_MS - 200);
+  // Line draws out 120ms after the header starts sliding in
+  const lineDelay   = headerDelay + 120;
+
   const sectionEl = document.createElement('section');
   sectionEl.className = 'munchie-section';
   sectionEl.setAttribute('aria-label', section.label);
 
   const header = document.createElement('div');
   header.className = 'section-header';
+  header.style.animationDelay = `${headerDelay}ms`;
   header.innerHTML = `
     <span class="section-icon" aria-hidden="true">${section.icon}</span>
     <h2 class="section-title">${section.label}</h2>
     <div class="section-line" aria-hidden="true"></div>
   `;
+
+  // Set the line's delay after innerHTML is parsed
+  const lineEl = header.querySelector('.section-line');
+  if (lineEl) lineEl.style.animationDelay = `${lineDelay}ms`;
 
   const ul = document.createElement('ul');
   ul.className = 'item-list';
@@ -205,7 +215,46 @@ function showError(message) {
 
 // ── Init ────────────────────────────────────────────────────
 
+// Only show the spinner if loading takes longer than this
+const SPINNER_DELAY_MS = 300;
+// If the spinner became visible, keep it for at least this long
+const SPINNER_MIN_VISIBLE_MS = 300;
+
 document.addEventListener('DOMContentLoaded', () => {
+  const loading = document.getElementById('loading');
+  let spinnerVisible = false;
+  let spinnerShownAt = null;
+
+  // Reveal spinner only after SPINNER_DELAY_MS
+  const spinnerTimer = setTimeout(() => {
+    spinnerVisible = true;
+    spinnerShownAt = Date.now();
+    if (loading) loading.style.display = '';
+  }, SPINNER_DELAY_MS);
+
+  /**
+   * Remove the spinner and run renderFn, respecting minimum visible time
+   * @param {Function} renderFn
+   */
+  function finish(renderFn) {
+    clearTimeout(spinnerTimer);
+
+    const hide = () => {
+      if (loading) loading.remove();
+      renderFn();
+    };
+
+    if (!spinnerVisible) {
+      // Spinner never appeared — render immediately
+      hide();
+    } else {
+      // Ensure spinner was visible for at least SPINNER_MIN_VISIBLE_MS
+      const visibleFor = Date.now() - spinnerShownAt;
+      const remaining  = Math.max(0, SPINNER_MIN_VISIBLE_MS - visibleFor);
+      setTimeout(hide, remaining);
+    }
+  }
+
   Promise.all(
     SECTIONS.map((section) =>
       fetch(sheetUrl(section.sheetName))
@@ -217,19 +266,18 @@ document.addEventListener('DOMContentLoaded', () => {
     )
   )
     .then((results) => {
-      const loading = document.getElementById('loading');
-      if (loading) loading.remove();
-
-      const app = document.getElementById('app');
-      results.forEach(({ section, items }, sectionIndex) => {
-        if (items.length > 0) {
-          const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
-          app.appendChild(createSectionEl(section, sorted, sectionIndex));
-        }
+      finish(() => {
+        const app = document.getElementById('app');
+        results.forEach(({ section, items }, sectionIndex) => {
+          if (items.length > 0) {
+            const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
+            app.appendChild(createSectionEl(section, sorted, sectionIndex));
+          }
+        });
       });
     })
     .catch((err) => {
       console.error('Munchie Matrix:', err);
-      showError('No se pudo cargar la lista.');
+      finish(() => showError('No se pudo cargar la lista.'));
     });
 });

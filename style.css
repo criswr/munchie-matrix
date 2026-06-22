@@ -118,6 +118,8 @@ body {
   gap: 10px;
   margin-bottom: 12px;
   padding: 0 4px;
+  opacity: 0;
+  animation: sectionHeaderReveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .section-icon {
@@ -138,6 +140,9 @@ body {
   flex: 1;
   height: 1px;
   background: linear-gradient(to right, var(--border-open), transparent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: sectionLineExpand 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* ── Item List ── */
@@ -309,6 +314,26 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes sectionHeaderReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sectionLineExpand {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 /* ── Active press feedback (mobile) ── */
